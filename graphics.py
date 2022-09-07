@@ -46,6 +46,36 @@ class Graphics:
             data_mom.at[idx, f'Mom{mom}{time}'] = data_mom.at[idx, 'Close'] / data_mom.at[idx-mom, 'Close'] - 1
         self.data = pd.merge(self.data, data_mom[['Date', f'Mom{mom}{time}']], on='Date', how='left').fillna(method='bfill')
 
+    def add_rsi(self, rsi, time='Daily'):
+        ''' Add RSI index to the graph data (Daily|Weekly|Monthly) '''
+        data_rsi = self.data[self.data[f'FlagClose{time}'] == True].reset_index(drop=True)
+        data_rsi[f'RSI{rsi}{time}'] = ""
+        data_rsi['tmp_var'] = 0
+        data_rsi['tmp_bull'] = 0
+        data_rsi['tmp_bear'] = 0
+        for idx in data_rsi.index[1:]:
+            data_rsi.at[idx,'tmp_var'] = data_rsi.at[idx, 'Close'] / data_rsi.at[idx-1, 'Close'] -1
+            if data_rsi.at[idx,'tmp_var'] > 0:
+                data_rsi.at[idx,'tmp_bull'] = data_rsi.at[idx,'tmp_var']
+            else:
+                data_rsi.at[idx,'tmp_bear'] = data_rsi.at[idx,'tmp_var']
+        for idx in data_rsi.index[rsi:]:
+            data_rsi.at[idx, f'RSI{rsi}{time}'] = 100 - (100 / (1 + np.mean(data_rsi.loc[idx-rsi:idx]['tmp_bull']) / np.mean(data_rsi.loc[idx-rsi:idx]['tmp_bear'])))
+        self.data = pd.merge(self.data, data_rsi[['Date', f'RSI{rsi}{time}']], on='Date', how='left').fillna(method='bfill') 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # if __name__ == '__main__':
