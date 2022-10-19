@@ -42,7 +42,7 @@ class Chart:
         data_mm = self.data[self.data[f'FlagClose{time}'] == True].reset_index(drop=True)
         data_mm[f'MM{mm}{time}'] = np.nan
         for idx in data_mm.index[mm-1:]:
-            data_mm.at[idx, f'MM{mm}{time}'] = np.mean(data_mm.loc[idx-mm+1:idx+1]['Close'])
+            data_mm.at[idx, f'MM{mm}{time}'] = np.mean(data_mm.loc[idx-mm+1:idx]['Close'])
         self.data = pd.merge(self.data, data_mm[['Date', f'MM{mm}{time}']], on='Date', how='left')
 
 

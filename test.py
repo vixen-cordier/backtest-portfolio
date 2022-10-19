@@ -17,19 +17,19 @@ class TestChart:
         for idx, equal in self.chart.data.apply(lambda x: x[f'{col}_expected'] == x[f'{col}'], axis = 1).items():
             if not equal:
                 err = err + 1
-                print(f"{msg} ERR value on index {idx} -> expected:{self.chart.data.iloc[idx][f'{col}_expected']}, value:{self.chart.data.iloc[idx][f'{col}']}.")
+                print(f"{msg} ERR on index {idx} -> expected:{self.chart.data.iloc[idx][f'{col}_expected']}, value:{self.chart.data.iloc[idx][f'{col}']}.")
         if err == 0:
             print(f"{msg} OK")
         self.err = self.err + err
 
 
-    def equal_float(self, col, pcs=0.001):
+    def equal_float(self, col):
         err = 0
         msg = f"Equality test on {col} ... "
-        for idx, equal in self.chart.data.apply(lambda x: abs(x[f'{col}_expected'] - x[f'{col}']) < pcs, axis = 1).items():
+        for idx, equal in self.chart.data.apply(lambda x: np.isclose(x[f'{col}_expected'], x[f'{col}'], equal_nan=True), axis = 1).items():
             if not equal:
                 err = err + 1
-                print(f"{msg} ERR value on index {idx} -> expected:{self.chart.data.iloc[idx][f'{col}_expected']}, value:{self.chart.data.iloc[idx][f'{col}']}.")
+                print(f"{msg} ERR on index {idx} -> expected:{self.chart.data.iloc[idx][f'{col}_expected']}, value:{self.chart.data.iloc[idx][f'{col}']}.")
         if err == 0:
             print(f"{msg} OK")
         self.err = self.err + err
