@@ -4,20 +4,21 @@ import numpy as np
 
 
 class Chart:
-    def __init__(self, ticker=None):
-        ''' Initialisation of graphic '''
-        self.ticker: str = ticker
+    def __init__(self):
+        """ Initialisation of graphic """
+        self.ticker: str
         self.data: pd.DataFrame
 
 
-    def fetch_yf(self):
-        ''' Fetch daily data from yahoo finance API'''
+    def fetch_yf(self, ticker):
+        """ Fetch daily data from yahoo finance API"""
+        self.ticker = ticker
         self.data = yf.Ticker(self.ticker).history(period="max")[['Close']].reset_index()
         print(f"{self.ticker}:  {self.data.iloc[0]['Date'].strftime('%Y-%m-%d')} --> {self.data.iloc[-1]['Date'].strftime('%Y-%m-%d')}")
 
 
     def set_flag(self):
-        ''' Flags end of Week and end of Month '''
+        """ Flags end of Week and end of Month """
         self.data['FlagCloseDaily'] = False
         self.data['FlagCloseWeekly'] = False
         self.data['FlagCloseMonthly'] = False
@@ -37,16 +38,16 @@ class Chart:
 
 
     def add_mm(self, mm: int, time='Daily'):
-        ''' Add moving average to the graph data (Daily|Weekly|Monthly) '''
+        """ Add moving average to the graph data (Daily|Weekly|Monthly) """
         data_mm = self.data[self.data[f'FlagClose{time}'] == True].reset_index(drop=True)
-        data_mm[f'MM{mm}{time}'] = ""
+        data_mm[f'MM{mm}{time}'] = np.nan
         for idx in data_mm.index[mm-1:]:
             data_mm.at[idx, f'MM{mm}{time}'] = np.mean(data_mm.loc[idx-mm+1:idx+1]['Close'])
-        self.data = pd.merge(self.data, data_mm[['Date', f'MM{mm}{time}']], on='Date', how='left').fillna(method='bfill')
+        self.data = pd.merge(self.data, data_mm[['Date', f'MM{mm}{time}']], on='Date', how='left')
 
 
     def add_mom(self, mom: int, time='Daily'):
-        ''' Add momentum value to the graph data (Daily|Weekly|Monthly) '''
+        """ Add momentum value to the graph data (Daily|Weekly|Monthly) """
         data_mom = self.data[self.data[f'FlagClose{time}'] == True].reset_index(drop=True)
         data_mom[f'Mom{mom}{time}'] = ""
         for idx in data_mom.index[mom:]:
@@ -55,7 +56,7 @@ class Chart:
 
 
     def add_rsi(self, rsi, time='Daily'):
-        ''' Add RSI index to the graph data (Daily|Weekly|Monthly) '''
+        """ Add RSI index to the graph data (Daily|Weekly|Monthly) """
         data_rsi = self.data[self.data[f'FlagClose{time}'] == True].reset_index(drop=True)
         data_rsi[f'RSI{rsi}{time}'] = ""
         data_rsi['tmp_var'] = 0

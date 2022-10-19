@@ -11,20 +11,25 @@ class TestChart:
         self.chart.data = pd.read_csv('data.csv', parse_dates=['Date'])
 
 
-    def test_set_flag(self):
-        self.chart.set_flag()
-        self.equal_test('FlagCloseDaily')
-        self.equal_test('FlagCloseWeekly')
-        self.equal_test('FlagCloseMonthly')
-
-
-    def equal_test(self, col):
+    def equal_bool(self, col):
         err = 0
         msg = f"Equality test on {col} ... "
         for idx, equal in self.chart.data.apply(lambda x: x[f'{col}_expected'] == x[f'{col}'], axis = 1).items():
             if not equal:
                 err = err + 1
-                print(f"{msg} ERR on index {idx} -> expected:{self.chart.data.iloc[idx][f'{col}_expected']}, value:{self.chart.data.iloc[idx][f'{col}']}.")
+                print(f"{msg} ERR value on index {idx} -> expected:{self.chart.data.iloc[idx][f'{col}_expected']}, value:{self.chart.data.iloc[idx][f'{col}']}.")
+        if err == 0:
+            print(f"{msg} OK")
+        self.err = self.err + err
+
+
+    def equal_float(self, col, pcs=0.001):
+        err = 0
+        msg = f"Equality test on {col} ... "
+        for idx, equal in self.chart.data.apply(lambda x: abs(x[f'{col}_expected'] - x[f'{col}']) < pcs, axis = 1).items():
+            if not equal:
+                err = err + 1
+                print(f"{msg} ERR value on index {idx} -> expected:{self.chart.data.iloc[idx][f'{col}_expected']}, value:{self.chart.data.iloc[idx][f'{col}']}.")
         if err == 0:
             print(f"{msg} OK")
         self.err = self.err + err
@@ -32,8 +37,20 @@ class TestChart:
 
 
 if __name__ == '__main__':
-    tchart = TestChart()
-    tchart.test_set_flag()
-    print(f"\n{tchart.err} error(s)") 
+    test = TestChart()
+
+    test.chart.set_flag()
+    test.equal_bool('FlagCloseDaily')
+    test.equal_bool('FlagCloseWeekly')
+    test.equal_bool('FlagCloseMonthly')
+
+    test.chart.add_mm(20)
+    test.chart.add_mm(20, time='Weekly')
+    test.chart.add_mm(10, time='Monthly')
+    test.equal_float('MM20Daily')
+    test.equal_float('MM20Weekly')
+    test.equal_float('MM10Monthly')
+
+    print(f"\n{test.err} error(s)") 
 
 
