@@ -1,18 +1,20 @@
 import yfinance as yf
 import pandas as pd
 import numpy as np
-from typing import List
 
-class Graphics:
-    def __init__(self, ticker):
+
+class Chart:
+    def __init__(self, ticker=None):
         ''' Initialisation of graphic '''
         self.ticker: str = ticker
         self.data: pd.DataFrame
+
 
     def fetch_yf(self):
         ''' Fetch daily data from yahoo finance API'''
         self.data = yf.Ticker(self.ticker).history(period="max")[['Close']].reset_index()
         print(f"{self.ticker}:  {self.data.iloc[0]['Date'].strftime('%Y-%m-%d')} --> {self.data.iloc[-1]['Date'].strftime('%Y-%m-%d')}")
+
 
     def set_flag(self):
         ''' Flags end of Week and end of Month '''
@@ -28,6 +30,11 @@ class Graphics:
                 self.data.at[idx, 'FlagCloseWeekly'] = True 
             if curr_date.month != next_date.month:
                 self.data.at[idx, 'FlagCloseMonthly'] = True 
+        last_row = self.data.index[-1]
+        self.data.at[last_row, 'FlagCloseDaily'] = True
+        self.data.at[last_row, 'FlagCloseWeekly'] = True 
+        self.data.at[last_row, 'FlagCloseMonthly'] = True 
+
 
     def add_mm(self, mm: int, time='Daily'):
         ''' Add moving average to the graph data (Daily|Weekly|Monthly) '''
@@ -45,6 +52,7 @@ class Graphics:
         for idx in data_mom.index[mom:]:
             data_mom.at[idx, f'Mom{mom}{time}'] = data_mom.at[idx, 'Close'] / data_mom.at[idx-mom, 'Close'] - 1
         self.data = pd.merge(self.data, data_mom[['Date', f'Mom{mom}{time}']], on='Date', how='left').fillna(method='bfill')
+
 
     def add_rsi(self, rsi, time='Daily'):
         ''' Add RSI index to the graph data (Daily|Weekly|Monthly) '''
@@ -65,27 +73,3 @@ class Graphics:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# if __name__ == '__main__':
-#     assets: List[Asset] = None
-#     # tickers = ['SPY','QQQ','IWM','XLE','TLT','GLD','ESE.PA','PUST.PA','RS2K.PA','BRE.PA','OBLI.PA','DBXN.F','GOLD.PA','BTC-USD','EURUSD=X']
-#     # for ticker in tickers:
-#     for ticker in ['SPY']:
-#         asset = Asset(ticker)
-#         asset.fetch_yf()
-#         asset.set_flag()
-#         asset.mm_daily([20])
-#         asset.mm_weekly([20])
-#         assets.append(asset)
